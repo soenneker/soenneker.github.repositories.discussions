@@ -4,7 +4,6 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Threading;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Octokit;
 using Soenneker.Extensions.HttpClient;
@@ -25,8 +24,7 @@ public class GitHubRepositoriesDiscussionsUtil : IGitHubRepositoriesDiscussionsU
     private readonly IGitHubHttpClient _gitHubHttpClient;
     private readonly IGitHubRepositoriesUtil _gitHubRepositoriesUtil;
 
-    public GitHubRepositoriesDiscussionsUtil(ILogger<GitHubRepositoriesDiscussionsUtil> logger, IGitHubHttpClient gitHubHttpClient, IConfiguration config,
-        IGitHubRepositoriesUtil gitHubRepositoriesUtil)
+    public GitHubRepositoriesDiscussionsUtil(ILogger<GitHubRepositoriesDiscussionsUtil> logger, IGitHubHttpClient gitHubHttpClient, IGitHubRepositoriesUtil gitHubRepositoriesUtil)
     {
         _logger = logger;
         _gitHubHttpClient = gitHubHttpClient;
