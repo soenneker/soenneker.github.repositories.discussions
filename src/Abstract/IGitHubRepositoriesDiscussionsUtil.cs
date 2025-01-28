@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Threading;
+using System;
 
 namespace Soenneker.GitHub.Repositories.Discussions.Abstract;
 
@@ -25,9 +26,11 @@ public interface IGitHubRepositoriesDiscussionsUtil
     /// </summary>
     /// <param name="owner">The owner of the repositories.</param>
     /// <param name="state">Optional state filter for the discussions (e.g., "open" or "closed").</param>
+    /// <param name="endAt"></param>
     /// <param name="cancellationToken">Optional cancellation token for the operation.</param>
+    /// <param name="startAt"></param>
     /// <returns>A ValueTask containing a list of discussions.</returns>
-    ValueTask<List<GitHubDiscussion>> GetAllForOwner(string owner, string? state = null, CancellationToken cancellationToken = default);
+    ValueTask<List<GitHubDiscussion>> GetAllForOwner(string owner, string? state = null, DateTime? startAt = null, DateTime? endAt = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Retrieves all discussions for a specified repository.

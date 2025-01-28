@@ -1,4 +1,5 @@
-﻿using Soenneker.GitHub.Repositories.Discussions.Abstract;
+﻿using System;
+using Soenneker.GitHub.Repositories.Discussions.Abstract;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
@@ -57,11 +58,11 @@ public class GitHubRepositoriesDiscussionsUtil : IGitHubRepositoriesDiscussionsU
         _logger.LogInformation("Discussion added successfully to repo ({owner}/{repo}).", owner, name);
     }
 
-    public async ValueTask<List<GitHubDiscussion>> GetAllForOwner(string owner, string? state = null, CancellationToken cancellationToken = default)
+    public async ValueTask<List<GitHubDiscussion>> GetAllForOwner(string owner, string? state = null, DateTime? startAt = null, DateTime? endAt = null, CancellationToken cancellationToken = default)
     {
         _logger.LogInformation("Getting all discussions for owner ({owner}) ...", owner);
 
-        IReadOnlyList<Repository> allRepos = await _gitHubRepositoriesUtil.GetAllForOwner(owner, cancellationToken).NoSync();
+        IReadOnlyList<Repository> allRepos = await _gitHubRepositoriesUtil.GetAllForOwner(owner, null, endAt, cancellationToken).NoSync();
 
         IEnumerable<Repository> hasDiscussionsFilter = allRepos.Where(c => c.HasDiscussions);
 
@@ -76,7 +77,7 @@ public class GitHubRepositoriesDiscussionsUtil : IGitHubRepositoriesDiscussionsU
                 allDiscussions.AddRange(discussions);
             }
 
-            await Task.Delay(RandomUtil.Next(50, 200), cancellationToken).NoSync();
+            await RandomUtil.Delay(50, 200, null, cancellationToken).NoSync();
         }
 
         return allDiscussions;
