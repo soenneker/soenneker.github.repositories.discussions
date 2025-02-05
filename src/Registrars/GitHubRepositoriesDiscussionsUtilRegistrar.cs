@@ -16,9 +16,9 @@ public static class GitHubRepositoriesDiscussionsUtilRegistrar
     /// </summary>
     public static IServiceCollection AddGitHubRepositoriesDiscussionsUtilAsSingleton(this IServiceCollection services)
     {
-        services.AddGitHubHttpClientAsSingleton();
-        services.AddGitHubRepositoriesUtilAsSingleton();
-        services.TryAddSingleton<IGitHubRepositoriesDiscussionsUtil, GitHubRepositoriesDiscussionsUtil>();
+        services.AddGitHubHttpClientAsSingleton()
+                .AddGitHubRepositoriesUtilAsSingleton()
+                .TryAddSingleton<IGitHubRepositoriesDiscussionsUtil, GitHubRepositoriesDiscussionsUtil>();
 
         return services;
     }
@@ -28,9 +28,9 @@ public static class GitHubRepositoriesDiscussionsUtilRegistrar
     /// </summary>
     public static IServiceCollection AddGitHubRepositoriesDiscussionsUtilAsScoped(this IServiceCollection services)
     {
-        services.AddGitHubHttpClientAsSingleton();
-        services.AddGitHubRepositoriesUtilAsScoped();
-        services.TryAddScoped<IGitHubRepositoriesDiscussionsUtil, GitHubRepositoriesDiscussionsUtil>();
+        services.AddGitHubHttpClientAsSingleton()
+                .AddGitHubRepositoriesUtilAsScoped()
+                .TryAddScoped<IGitHubRepositoriesDiscussionsUtil, GitHubRepositoriesDiscussionsUtil>();
 
         return services;
     }
