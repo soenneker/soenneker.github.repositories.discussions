@@ -25,7 +25,8 @@ public class GitHubRepositoriesDiscussionsUtil : IGitHubRepositoriesDiscussionsU
     private readonly IGitHubHttpClient _gitHubHttpClient;
     private readonly IGitHubRepositoriesUtil _gitHubRepositoriesUtil;
 
-    public GitHubRepositoriesDiscussionsUtil(ILogger<GitHubRepositoriesDiscussionsUtil> logger, IGitHubHttpClient gitHubHttpClient, IGitHubRepositoriesUtil gitHubRepositoriesUtil)
+    public GitHubRepositoriesDiscussionsUtil(ILogger<GitHubRepositoriesDiscussionsUtil> logger, IGitHubHttpClient gitHubHttpClient,
+        IGitHubRepositoriesUtil gitHubRepositoriesUtil)
     {
         _logger = logger;
         _gitHubHttpClient = gitHubHttpClient;
@@ -58,7 +59,8 @@ public class GitHubRepositoriesDiscussionsUtil : IGitHubRepositoriesDiscussionsU
         _logger.LogInformation("Discussion added successfully to repo ({owner}/{repo}).", owner, name);
     }
 
-    public async ValueTask<List<GitHubDiscussion>> GetAllForOwner(string owner, string? state = null, DateTime? startAt = null, DateTime? endAt = null, CancellationToken cancellationToken = default)
+    public async ValueTask<List<GitHubDiscussion>> GetAllForOwner(string owner, string? state = null, DateTime? startAt = null, DateTime? endAt = null,
+        CancellationToken cancellationToken = default)
     {
         _logger.LogInformation("Getting all discussions for owner ({owner}) ...", owner);
 
@@ -83,7 +85,8 @@ public class GitHubRepositoriesDiscussionsUtil : IGitHubRepositoriesDiscussionsU
         return allDiscussions;
     }
 
-    public async ValueTask<List<GitHubDiscussion>> GetAll(string owner, string name, string? state = null, bool log = true, CancellationToken cancellationToken = default)
+    public async ValueTask<List<GitHubDiscussion>> GetAll(string owner, string name, string? state = null, bool log = true,
+        CancellationToken cancellationToken = default)
     {
         _logger.LogInformation("Getting all discussions for repo ({owner}/{repo}) ...", owner, name);
 
@@ -101,7 +104,7 @@ public class GitHubRepositoriesDiscussionsUtil : IGitHubRepositoriesDiscussionsU
 
             List<GitHubDiscussion>? pageDiscussions = await client.TrySendToType<List<GitHubDiscussion>>(request, _logger, cancellationToken).NoSync();
 
-            if (pageDiscussions is { Count: > 0 })
+            if (pageDiscussions is {Count: > 0})
             {
                 if (state.HasContent())
                 {
@@ -159,7 +162,8 @@ public class GitHubRepositoriesDiscussionsUtil : IGitHubRepositoriesDiscussionsU
         if (!response.IsSuccessStatusCode)
         {
             string errorContent = await response.Content.ReadAsStringAsync(cancellationToken).NoSync();
-            _logger.LogError("Failed to delete discussion #{discussionNumber}: {StatusCode} - {ErrorContent}", discussionNumber, response.StatusCode, errorContent);
+            _logger.LogError("Failed to delete discussion #{discussionNumber}: {StatusCode} - {ErrorContent}", discussionNumber, response.StatusCode,
+                errorContent);
             response.EnsureSuccessStatusCode();
         }
 
