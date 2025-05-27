@@ -6,12 +6,12 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using System.Threading;
 using Microsoft.Extensions.Logging;
-using Octokit;
 using Soenneker.Extensions.HttpClient;
 using Soenneker.Extensions.String;
 using Soenneker.Extensions.Task;
 using Soenneker.Extensions.ValueTask;
 using Soenneker.GitHub.Client.Http.Abstract;
+using Soenneker.GitHub.OpenApiClient.Models;
 using Soenneker.GitHub.Repositories.Abstract;
 using Soenneker.GitHub.Repositories.Discussions.Dtos;
 using Soenneker.Utils.Random;
@@ -62,13 +62,13 @@ public class GitHubRepositoriesDiscussionsUtil : IGitHubRepositoriesDiscussionsU
     {
         _logger.LogInformation("Getting all discussions for owner ({owner}) ...", owner);
 
-        IReadOnlyList<Repository> allRepos = await _gitHubRepositoriesUtil.GetAllForOwner(owner, null, endAt, cancellationToken).NoSync();
+        List<MinimalRepository> allRepos = await _gitHubRepositoriesUtil.GetAllForOwner(owner, null, endAt, cancellationToken).NoSync();
 
-        IEnumerable<Repository> hasDiscussionsFilter = allRepos.Where(c => c.HasDiscussions);
+        IEnumerable<MinimalRepository> hasDiscussionsFilter = allRepos.Where(c => c.HasDiscussions.GetValueOrDefault());
 
         var allDiscussions = new List<GitHubDiscussion>();
 
-        foreach (Repository repo in hasDiscussionsFilter)
+        foreach (MinimalRepository repo in hasDiscussionsFilter)
         {
             List<GitHubDiscussion> discussions = await GetAll(owner, repo.Name, state, false, cancellationToken).NoSync();
 
