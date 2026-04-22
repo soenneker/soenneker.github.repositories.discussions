@@ -1,20 +1,19 @@
-﻿using Soenneker.GitHub.Repositories.Discussions.Abstract;
-using Soenneker.Tests.FixturedUnit;
-using Xunit;
+using Soenneker.GitHub.Repositories.Discussions.Abstract;
+using Soenneker.Tests.HostedUnit;
 
 namespace Soenneker.GitHub.Repositories.Discussions.Tests;
 
-[Collection("Collection")]
-public class GitHubRepositoriesDiscussionsUtilTests : FixturedUnitTest
+[ClassDataSource<Host>(Shared = SharedType.PerTestSession)]
+public class GitHubRepositoriesDiscussionsUtilTests : HostedUnitTest
 {
     private readonly IGitHubRepositoriesDiscussionsUtil _util;
 
-    public GitHubRepositoriesDiscussionsUtilTests(Fixture fixture, ITestOutputHelper output) : base(fixture, output)
+    public GitHubRepositoriesDiscussionsUtilTests(Host host) : base(host)
     {
         _util = Resolve<IGitHubRepositoriesDiscussionsUtil>(true);
     }
 
-    [Fact]
+    [Test]
     public void Default()
     {
 
