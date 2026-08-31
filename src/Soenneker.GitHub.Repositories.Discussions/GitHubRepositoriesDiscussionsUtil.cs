@@ -3,6 +3,7 @@ using Soenneker.GitHub.Repositories.Discussions.Abstract;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Net.Http.Json;
 using System.Threading.Tasks;
 using System.Threading;
 using Microsoft.Extensions.Logging;
@@ -18,7 +19,6 @@ using Soenneker.Utils.Random;
 
 namespace Soenneker.GitHub.Repositories.Discussions;
 
-/// <inheritdoc cref="IGitHubRepositoriesDiscussionsUtil"/>
 public class GitHubRepositoriesDiscussionsUtil : IGitHubRepositoriesDiscussionsUtil
 {
     private readonly ILogger<GitHubRepositoriesDiscussionsUtil> _logger;
@@ -42,18 +42,27 @@ public class GitHubRepositoriesDiscussionsUtil : IGitHubRepositoriesDiscussionsU
         HttpClient client = await _gitHubHttpClient.Get(cancellationToken).NoSync();
 
         using var request = new HttpRequestMessage(HttpMethod.Post, url);
+        request.Content = JsonContent.Create(new
+        {
+            title = discussion.Title,
+            body = discussion.Body,
+            category_id = discussion.Category.Id
+        });
 
         (bool successful, HttpResponseMessage? response) = await client.TrySend(request, _logger, cancellationToken).NoSync();
-
-        if (!successful)
+        using (response)
         {
-            if (response != null)
+            if (!successful)
             {
-                string errorContent = await response.Content.ReadAsStringAsync(cancellationToken).NoSync();
-                _logger.LogError("Failed to add discussion: {StatusCode} - {ErrorContent}", response.StatusCode, errorContent);
+                if (response != null)
+                {
+                    string errorContent = await response.Content.ReadAsStringAsync(cancellationToken).NoSync();
+                    _logger.LogError("Failed to add discussion: {StatusCode} - {ErrorContent}", response.StatusCode, errorContent);
+                    response.EnsureSuccessStatusCode();
+                }
+
+                throw new HttpRequestException("GitHub discussion creation failed without an HTTP response.");
             }
-            else
-                _logger.LogError("Failed to add discussion");
         }
 
         _logger.LogInformation("Discussion added successfully to repo ({owner}/{repo}).", owner, name);
@@ -64,7 +73,7 @@ public class GitHubRepositoriesDiscussionsUtil : IGitHubRepositoriesDiscussionsU
     {
         _logger.LogInformation("Getting all discussions for owner ({owner}) ...", owner);
 
-        List<MinimalRepository> allRepos = await _gitHubRepositoriesUtil.GetAllForOwner(owner, null, endAt, cancellationToken).NoSync();
+        List<MinimalRepository> allRepos = await _gitHubRepositoriesUtil.GetAllForOwner(owner, startAt, endAt, cancellationToken).NoSync();
 
         IEnumerable<MinimalRepository> hasDiscussionsFilter = allRepos.Where(c => c.HasDiscussions.GetValueOrDefault());
 
@@ -72,7 +81,10 @@ public class GitHubRepositoriesDiscussionsUtil : IGitHubRepositoriesDiscussionsU
 
         foreach (MinimalRepository repo in hasDiscussionsFilter)
         {
-            List<GitHubDiscussion> discussions = await GetAll(owner, repo.Name, state, false, cancellationToken).NoSync();
+            if (repo.Name is not { Length: > 0 } repoName)
+                continue;
+
+            List<GitHubDiscussion> discussions = await GetAll(owner, repoName, state, false, cancellationToken).NoSync();
 
             if (discussions.Count is not 0)
             {
@@ -110,7 +122,7 @@ public class GitHubRepositoriesDiscussionsUtil : IGitHubRepositoriesDiscussionsU
                 {
                     foreach (GitHubDiscussion discussion in pageDiscussions)
                     {
-                        if (discussion.State == state)
+                        if (string.Equals(discussion.State, state, StringComparison.OrdinalIgnoreCase))
                             discussions.Add(discussion);
                     }
                 }
@@ -157,7 +169,7 @@ public class GitHubRepositoriesDiscussionsUtil : IGitHubRepositoriesDiscussionsU
 
         HttpClient client = await _gitHubHttpClient.Get(cancellationToken).NoSync();
 
-        HttpResponseMessage response = await client.SendAsync(request, cancellationToken).NoSync();
+        using HttpResponseMessage response = await client.SendAsync(request, cancellationToken).NoSync();
 
         if (!response.IsSuccessStatusCode)
         {
