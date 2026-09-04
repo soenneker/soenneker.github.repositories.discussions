@@ -19,6 +19,7 @@ using Soenneker.Utils.Random;
 
 namespace Soenneker.GitHub.Repositories.Discussions;
 
+/// <inheritdoc cref="IGitHubRepositoriesDiscussionsUtil" />
 public class GitHubRepositoriesDiscussionsUtil : IGitHubRepositoriesDiscussionsUtil
 {
     private readonly ILogger<GitHubRepositoriesDiscussionsUtil> _logger;
