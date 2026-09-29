@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Text;
+using System.Text.Json.Nodes;
 using Soenneker.GitHub.Repositories.Discussions.Abstract;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,7 +21,6 @@ using Soenneker.Utils.Random;
 
 namespace Soenneker.GitHub.Repositories.Discussions;
 
-/// <inheritdoc cref="IGitHubRepositoriesDiscussionsUtil" />
 public class GitHubRepositoriesDiscussionsUtil : IGitHubRepositoriesDiscussionsUtil
 {
     private readonly ILogger<GitHubRepositoriesDiscussionsUtil> _logger;
@@ -43,12 +44,12 @@ public class GitHubRepositoriesDiscussionsUtil : IGitHubRepositoriesDiscussionsU
         HttpClient client = await _gitHubHttpClient.Get(cancellationToken).NoSync();
 
         using var request = new HttpRequestMessage(HttpMethod.Post, url);
-        request.Content = JsonContent.Create(new
+        request.Content = new StringContent(new JsonObject
         {
-            title = discussion.Title,
-            body = discussion.Body,
-            category_id = discussion.Category.Id
-        });
+            ["title"] = discussion.Title,
+            ["body"] = discussion.Body,
+            ["category_id"] = discussion.Category.Id
+        }.ToJsonString(), Encoding.UTF8, "application/json");
 
         (bool successful, HttpResponseMessage? response) = await client.TrySend(request, _logger, cancellationToken).NoSync();
         using (response)
@@ -115,7 +116,7 @@ public class GitHubRepositoriesDiscussionsUtil : IGitHubRepositoriesDiscussionsU
             var pagedUrl = $"{url}&page={page}";
             using var request = new HttpRequestMessage(HttpMethod.Get, pagedUrl);
 
-            List<GitHubDiscussion>? pageDiscussions = await client.TrySendToType<List<GitHubDiscussion>>(request, _logger, cancellationToken).NoSync();
+            List<GitHubDiscussion>? pageDiscussions = await ReadPage(client, request, cancellationToken).NoSync();
 
             if (pageDiscussions is {Count: > 0})
             {
@@ -144,6 +145,30 @@ public class GitHubRepositoriesDiscussionsUtil : IGitHubRepositoriesDiscussionsU
             _logger.LogInformation("Retrieved {Count} discussions from repo ({owner}/{repo}).", discussions.Count, owner, name);
 
         return discussions;
+    }
+
+    private async ValueTask<List<GitHubDiscussion>?> ReadPage(HttpClient client, HttpRequestMessage request, CancellationToken cancellationToken)
+    {
+        try
+        {
+            using HttpResponseMessage response = await client.SendAsync(request, cancellationToken).NoSync();
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogError("HTTP request ({uri}) returned status {statusCode}", request.RequestUri, response.StatusCode);
+                return null;
+            }
+            return await response.Content.ReadFromJsonAsync(AotJsonContext.Get<List<GitHubDiscussion>>(), cancellationToken).NoSync();
+        }
+        catch (OperationCanceledException)
+        {
+            _logger.LogWarning("HTTP request to {uri} was canceled.", request.RequestUri);
+            return null;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to read a discussion page from {uri}", request.RequestUri);
+            return null;
+        }
     }
 
     public async ValueTask DeleteAll(string owner, string name, CancellationToken cancellationToken = default)
