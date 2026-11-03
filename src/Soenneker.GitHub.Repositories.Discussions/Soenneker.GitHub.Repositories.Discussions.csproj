@@ -47,6 +47,6 @@
 
     <ItemGroup>
         <PackageReference Include="Soenneker.Extensions.HttpClient" Version="11.0.4170" />
-        <PackageReference Include="Soenneker.GitHub.Repositories" Version="11.0.1385" />
+        <PackageReference Include="Soenneker.GitHub.Repositories" Version="11.0.1386" />
     </ItemGroup>
 </Project>
